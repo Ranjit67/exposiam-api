@@ -7,7 +7,7 @@
     "start": "node app.js"
   },
   "keywords": [],
-  "author": "Ranjit Sahoo",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
