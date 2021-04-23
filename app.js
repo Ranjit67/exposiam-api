@@ -46,6 +46,13 @@ const fire = firebase.initializeApp({
 const auth = fire.auth();
 //end firebase
 //route part
+app.get("data", async (req, res, next) => {
+  try {
+    res.json({ data: "data send" });
+  } catch (error) {
+    next(error);
+  }
+});
 app.post("/", async (req, res, next) => {
   try {
     const { email, password } = req.body;
