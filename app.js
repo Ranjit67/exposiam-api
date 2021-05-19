@@ -63,54 +63,58 @@ app.post("/", async (req, res, next) => {
         "Email,password and role, All three field are required.."
       );
     const response = await auth.createUserWithEmailAndPassword(email, password);
+    //stall
     if (role === "stall") {
-      const sendUser = await database.ref(`Users/${response.user.uid}/`).set({
+      await database.ref(`Users/${response.user.uid}/`).set({
         role: "stall",
         stallID: response.user.uid,
         password,
         email,
       });
-      if (!sendUser)
-        throw createError.Forbidden("Stall is not save in User database.");
-      const dataInExibition = await database
+      // .then((da) => console.log(da));
+      // console.log(sendUser);
+      // if (!sendUser)
+      //   throw createError.Forbidden("Stall is not save in User database.");
+      //const dataInExibition =
+      await database
         .ref(`EXHIBITORS/${response.user.uid}/stall`)
         .set(response.user.uid);
-      if (!dataInExibition)
-        throw createError.Forbidden("Stall is not stored in EXHIBITORS");
+      // if (!dataInExibition)
+      //   throw createError.Forbidden("Stall is not stored in EXHIBITORS");
       res.json({ data: "stall save success fully..." });
+      //stall member
     } else if (role === "StallMember") {
-      const stallMemberExibitor = await database
+      //const stallMemberExibitor =
+      await database
         .ref(`EXHIBITORS/${stallID}/StallMember/${response.user.uid}`)
         .set(response.user.uid);
-      if (!stallMemberExibitor)
-        throw createError.Forbidden("Stall member doesn't save in EXHIBITOR. ");
-
-      const stallMemberUser = await database
-        .ref(`Users/${response.user.uid}/`)
-        .set({
-          role: "StallMember",
-          password,
-          stallID,
-          email,
-        });
-      if (!stallMemberUser)
-        throw createError.Forbidden(
-          "Stall member does not save in user database."
-        );
+      // if (!stallMemberExibitor)
+      //   throw createError.Forbidden("Stall member doesn't save in EXHIBITOR. ");
+      //const stallMemberUser =
+      await database.ref(`Users/${response.user.uid}/`).set({
+        role: "StallMember",
+        password,
+        stallID,
+        email,
+      });
+      // if (!stallMemberUser)
+      //   throw createError.Forbidden(
+      //     "Stall member does not save in user database."
+      //   );
       res.json({ data: "stall member save successfully.." });
+      //speaker
     } else if (role === "speaker") {
-      const speakerUser = await database
-        .ref(`Users/${response.user.uid}/`)
-        .set({
-          name,
-          role: "speaker",
-          password,
-          email,
-        });
-      if (!speakerUser)
-        throw createError.Forbidden(
-          "Some how speaker does not save in User database..."
-        );
+      //const speakerUser =
+      await database.ref(`Users/${response.user.uid}/`).set({
+        name,
+        role: "speaker",
+        password,
+        email,
+      });
+      // if (!speakerUser)
+      //   throw createError.Forbidden(
+      //     "Some how speaker does not save in User database..."
+      //   );
       res.json({ data: "Speaker is save successfully..." });
     }
   } catch (error) {
