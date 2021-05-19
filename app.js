@@ -44,6 +44,7 @@ const fire = firebase.initializeApp({
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID, // Analytics
 });
 const auth = fire.auth();
+const database = fire.database();
 //end firebase
 //route part
 app.get("/data", async (req, res, next) => {
@@ -53,15 +54,76 @@ app.get("/data", async (req, res, next) => {
     next(error);
   }
 });
+//for stall entry
 app.post("/", async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) throw createError.BadRequest();
+    const { email, password, role, stallID, name } = req.body;
+    if (!email || !password || !role)
+      throw createError.BadRequest(
+        "Email,password and role, All three field are required.."
+      );
     const response = await auth.createUserWithEmailAndPassword(email, password);
-
-    res.send({ data: response.user.uid });
+    //stall
+    if (role === "stall") {
+      await database.ref(`Users/${response.user.uid}/`).set({
+        role: "stall",
+        stallID: response.user.uid,
+        password,
+        email,
+      });
+      // .then((da) => console.log(da));
+      // console.log(sendUser);
+      // if (!sendUser)
+      //   throw createError.Forbidden("Stall is not save in User database.");
+      //const dataInExibition =
+      await database
+        .ref(`EXHIBITORS/${response.user.uid}/stall`)
+        .set(response.user.uid);
+      // if (!dataInExibition)
+      //   throw createError.Forbidden("Stall is not stored in EXHIBITORS");
+      res.json({ data: "stall save success fully..." });
+      //stall member
+    } else if (role === "StallMember") {
+      //const stallMemberExibitor =
+      await database
+        .ref(`EXHIBITORS/${stallID}/StallMember/${response.user.uid}`)
+        .set(response.user.uid);
+      // if (!stallMemberExibitor)
+      //   throw createError.Forbidden("Stall member doesn't save in EXHIBITOR. ");
+      //const stallMemberUser =
+      await database.ref(`Users/${response.user.uid}/`).set({
+        role: "StallMember",
+        password,
+        stallID,
+        email,
+      });
+      // if (!stallMemberUser)
+      //   throw createError.Forbidden(
+      //     "Stall member does not save in user database."
+      //   );
+      res.json({ data: "stall member save successfully.." });
+      //speaker
+    } else if (role === "speaker") {
+      //const speakerUser =
+      await database.ref(`Users/${response.user.uid}/`).set({
+        name,
+        role: "speaker",
+        password,
+        email,
+      });
+      // if (!speakerUser)
+      //   throw createError.Forbidden(
+      //     "Some how speaker does not save in User database..."
+      //   );
+      res.json({ data: "Speaker is save successfully..." });
+    }
   } catch (error) {
-    next(error);
+    if (error.status === 500) {
+      error.status = 400;
+      next(error);
+    } else {
+      next(error);
+    }
   }
 });
 //route end
@@ -71,10 +133,10 @@ app.use(async (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  res.status(err.status || 500);
+  res.status(err.status || 400);
   res.send({
     error: {
-      status: err.status || 500,
+      status: err.status || 400,
       message: err.message,
     },
   });
